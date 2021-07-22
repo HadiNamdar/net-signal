@@ -2,6 +2,7 @@ import os
 import sys
 import glob
 import serial
+import pynmea2
 
 def serial_ports():
 
@@ -24,15 +25,19 @@ def main():
     ser = serial.Serial()
     ser.port = COM
     ser.baudrate = 9600
-    ser.timeout = 1
+    ser.timeout = 0.5
     ser.open()
     if ser.is_open == True:
         print("Serial Connection created successfully")
         while True:
+            dataout = pynmea2.NMEAStreamReader()
             line = ser.readline()   # read a byte
-            if line:
-                string = line.decode()  # convert the byte string to a unicode string
-                print(string)
+            if line[0:6] == "$GPRMC":
+                newmsg=pynmea2.parse(line)
+                lat=newmsg.latitude
+                lng=newmsg.longitude
+                gps = "Latitude=" + str(lat) + "and Longitude=" + str(lng)
+                print(gps)
         ser.close()
     else:
         print("Serial Connection is not established")
